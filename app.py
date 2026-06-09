@@ -1,12 +1,11 @@
 import os
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import google.generativeai as genai
+from google import genai
 
 app = Flask(__name__)
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 DGI_KNOWLEDGE = """
 You are the official AI assistant for Dronacharya Group of Institutions (DGI), Greater Noida.
@@ -73,14 +72,13 @@ CONTACT:
 - Social: Instagram @dgi_dronacharya | Twitter @DronacharyaDgi
 """
 
-conversations = {}
-
-def get_ai_reply(user_phone, user_message):
-    if user_phone not in conversations:
-        conversations[user_phone] = model.start_chat(history=[])
+def get_ai_reply(user_message):
     try:
         full_msg = DGI_KNOWLEDGE + "\n\nStudent says: " + user_message
-        response = conversations[user_phone].send_message(full_msg)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=full_msg
+        )
         return response.text
     except Exception as e:
         print(f"Gemini error: {e}")
@@ -91,7 +89,7 @@ def webhook():
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "unknown")
     print(f"Message from {sender}: {incoming_msg}")
-    reply = get_ai_reply(sender, incoming_msg)
+    reply = get_ai_reply(incoming_msg)
     resp = MessagingResponse()
     resp.message(reply)
     return str(resp)
