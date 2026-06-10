@@ -1,11 +1,12 @@
 import os
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-from google import genai
+import google.generativeai as genai
 
 app = Flask(__name__)
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 DGI_KNOWLEDGE = """
 You are the official AI assistant for Dronacharya Group of Institutions (DGI), Greater Noida.
@@ -23,7 +24,6 @@ ABOUT DGI:
 - Phone: 0120-2322022, 2323851-56
 - Email: registrar@gnindia.dronacharya.info
 - Admission Helpline: +91-9910380115
-- WhatsApp: https://api.whatsapp.com/send?phone=919910380115
 
 COURSES:
 B.Tech: CSE, CSIT, IT, CSE-AIML, ECE, ECS, EEE, ME
@@ -37,48 +37,25 @@ ADMISSIONS:
 - UG: JEE Main / UPTAC counselling
 - PG: CAT / MAT / CUET
 - Online Form: https://admission.dronacharya.info/gn/applyonline.aspx
-- Admission Brochure: https://gnindia.dronacharya.info/Downloads/Admissions/dronacharya-group-of-institutions-admission-brochure-2026.pdf
-- Education Loan: https://gnindia.dronacharya.info/Education-Loan.aspx
-- Scholarships: https://gnindia.dronacharya.info/Financial-support.aspx
 
 PLACEMENTS:
-- Highest Package: 45 LPA (2023)
-- Top Recruiters: TCS, Deloitte, HSBC, BYJU'S and many more
+- Highest Package: 45 LPA
+- Top Recruiters: TCS, Deloitte, HSBC, BYJU'S
 - Placement Details: https://gnindia.dronacharya.info/PlacementDesk.aspx
 
-TRANSPORT / BUS SERVICE:
-- DGI has 17+ dedicated bus routes covering Delhi, Noida, Greater Noida, Ghaziabad, Faridabad and all NCR regions
-- Safe, reliable and punctual buses for students and staff
-- Bus Route Schedule (Jan-June 2026): https://gnindia.dronacharya.info/Downloads/BusSchedule/BUS-ROUTE-JANUARY-TO-JUNE-2026.pdf
-- For exact stop timings and route details, download the PDF above or contact college: 0120-2322022
+TRANSPORT:
+- 17+ bus routes covering Delhi, Noida, Greater Noida, Ghaziabad, Faridabad
+- Bus Route PDF: https://gnindia.dronacharya.info/Downloads/BusSchedule/BUS-ROUTE-JANUARY-TO-JUNE-2026.pdf
 
-CAMPUS FACILITIES:
-- Library, Canteen, Cafeteria, Seminar Hall, Auditorium
-- R&D Lab, Automation Lab, Conference Hall
-- Sports, Clubs, IEEE & CSI Student Chapters
-- Women Development Cell
-- Transport facility across NCR
-
-RANKINGS:
-- ARIIA 2021: Excellent band by MHRD
-- NIRF Innovation: Ranked 26-50 in India
-- CSI Mumbai: Best Institute of the Year
-- NAAC & NBA Accredited
-
-CONTACT:
-- Website: https://gnindia.dronacharya.info
-- FAQ: https://gnindia.dronacharya.info/FAQ.aspx
-- Events: https://gnindia.dronacharya.info/events/currentEvent.aspx
-- Social: Instagram @dgi_dronacharya | Twitter @DronacharyaDgi
+CAMPUS:
+- Library, Canteen, Seminar Hall, Auditorium, R&D Lab
+- Clubs, IEEE, CSI Student Chapters
 """
 
 def get_ai_reply(user_message):
     try:
         full_msg = DGI_KNOWLEDGE + "\n\nStudent says: " + user_message
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=full_msg
-        )
+        response = model.generate_content(full_msg)
         return response.text
     except Exception as e:
         print(f"Gemini error: {e}")
