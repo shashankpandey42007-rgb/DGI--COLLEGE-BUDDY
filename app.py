@@ -27,7 +27,9 @@ def get_ai_reply(user_message):
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://dgi-bot.railway.app",
+                "X-Title": "DGI College Bot"
             },
             json={
                 "model": "google/gemini-flash-1.5",
@@ -35,9 +37,18 @@ def get_ai_reply(user_message):
                     {"role": "system", "content": DGI_KNOWLEDGE},
                     {"role": "user", "content": user_message}
                 ]
-            }
+            },
+            timeout=30
         )
-        return response.json()["choices"][0]["message"]["content"]
+        data = response.json()
+        print("Response:", data)
+        if "choices" in data:
+            return data["choices"][0]["message"]["content"]
+        elif "error" in data:
+            print("API Error:", data["error"])
+            return "Sorry, technical issue! Visit: gnindia.dronacharya.info"
+        else:
+            return "Sorry, technical issue! Visit: gnindia.dronacharya.info"
     except Exception as e:
         print(f"Error: {e}")
         return "Sorry, technical issue! Visit: gnindia.dronacharya.info or call 0120-2322022"
