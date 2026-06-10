@@ -1,10 +1,9 @@
 import os
+import requests
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-from google import genai
 
 app = Flask(__name__)
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 DGI_KNOWLEDGE = """You are the official AI assistant for Dronacharya Group of Institutions (DGI), Greater Noida. Answer in Hindi or English based on user's language. Keep replies short and WhatsApp-friendly.
 
@@ -24,14 +23,23 @@ CAMPUS: Library, Canteen, Seminar Hall, Auditorium, R&D Lab, Clubs, IEEE, CSI"""
 
 def get_ai_reply(user_message):
     try:
-        full_msg = DGI_KNOWLEDGE + "\n\nStudent: " + user_message
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=full_msg
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "google/gemini-flash-1.5",
+                "messages": [
+                    {"role": "system", "content": DGI_KNOWLEDGE},
+                    {"role": "user", "content": user_message}
+                ]
+            }
         )
-        return response.text
+        return response.json()["choices"][0]["message"]["content"]
     except Exception as e:
-        print(f"Gemini error: {e}")
+        print(f"Error: {e}")
         return "Sorry, technical issue! Visit: gnindia.dronacharya.info or call 0120-2322022"
 
 @app.route("/webhook", methods=["POST"])
