@@ -32,7 +32,7 @@ def get_ai_reply(user_message):
                 "X-Title": "DGI College Bot"
             },
             json={
-                "model": "google/gemini-flash-1.5",
+                "model": "google/gemini-2.0-flash-001",
                 "messages": [
                     {"role": "system", "content": DGI_KNOWLEDGE},
                     {"role": "user", "content": user_message}
