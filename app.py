@@ -32,7 +32,7 @@ def get_ai_reply(user_message):
                 "X-Title": "DGI College Bot"
             },
             json={
-                "model": "meta-llama/llama-3.3-70b-instruct:free",
+                "model": "deepseek/deepseek-chat:free",
                 "messages": [
                     {"role": "system", "content": DGI_KNOWLEDGE},
                     {"role": "user", "content": user_message}
